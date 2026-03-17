@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health-e-Schools Patient Satisfaction Survey</title>
+<style>
+:root {
+  --hes-blue: #118CB0;
+  --hes-dark: #393F47;
+  --hes-light: #F0F4F6;
+  --text: #393F47;
+  --text-muted: #6b7280;
+  --border: #d1d5db;
+  --border-focus: #118CB0;
+  --bg: #ffffff;
+  --bg-secondary: #f9fafb;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: var(--text); font-size: 15px; line-height: 1.5; }
+
+.page-wrap { max-width: 740px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+.site-header { background: white; border-bottom: 3px solid var(--hes-blue); padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: var(--radius) var(--radius) 0 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.logo { font-size: 22px; font-weight: 600; color: var(--hes-dark); letter-spacing: -0.3px; }
+.logo span { color: var(--hes-blue); }
+.site-header p { font-size: 13px; color: var(--text-muted); }
+
+.tab-bar { display: flex; background: white; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.tab-btn { flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 500; color: var(--text-muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: inherit; }
+.tab-btn.active { color: var(--hes-blue); border-bottom-color: var(--hes-blue); background: #f0f9ff; }
+.tab-btn:hover:not(.active) { background: var(--bg-secondary); }
+
+.survey-card { background: white; border-radius: var(--radius); border: 1px solid var(--border); padding: 1.5rem; }
+
+.privacy-bar { background: #eff6ff; border-left: 3px solid var(--hes-blue); padding: 10px 14px; font-size: 13px; color: #1e40af; border-radius: 0 var(--radius) var(--radius) 0; margin-bottom: 1.5rem; line-height: 1.5; }
+.privacy-bar strong { color: #1e3a8a; }
+
+.sec-head { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hes-blue); padding: 5px 0 8px; border-bottom: 1px solid #e5e7eb; margin: 1.5rem 0 1rem; }
+
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+@media (max-width: 480px) { .field-grid { grid-template-columns: 1fr; } }
+.field-item { display: flex; flex-direction: column; gap: 4px; }
+.field-item label { font-size: 12px; color: var(--text-muted); }
+.field-item label .req { color: var(--hes-blue); font-weight: 600; }
+.field-item label .opt { color: #9ca3af; font-size: 11px; }
+.field-item input[type="text"], .field-item input[type="date"] { border: none; border-bottom: 1.5px solid var(--border); border-radius: 0; padding: 6px 2px; font-size: 14px; background: transparent; color: var(--text); outline: none; width: 100%; font-family: inherit; }
+.field-item input[type="text"]:focus, .field-item input[type="date"]:focus { border-bottom-color: var(--hes-blue); }
+.field-item input.req-field { border-bottom: 2px solid var(--hes-blue); }
+
+.q-block { margin-bottom: 1.25rem; }
+.q-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 0.6rem; line-height: 1.4; }
+.q-num { color: var(--hes-blue); }
+
+.scale-wrap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 0.5rem; }
+@media (max-width: 480px) { .scale-wrap { grid-template-columns: repeat(3, 1fr); } }
+.scale-opt { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+.scale-opt input[type="radio"] { display: none; }
+.scale-box { width: 100%; padding: 10px 4px; border: 1.5px solid var(--border); border-radius: var(--radius); text-align: center; font-size: 13px; transition: all 0.12s; background: white; }
+.scale-opt:hover .scale-box { border-color: var(--hes-blue); background: #f0f9ff; }
+.scale-opt input:checked + .scale-box { background: var(--hes-blue); border-color: var(--hes-blue); color: white; }
+.scale-lbl { font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.2; }
+
+.yn-row { display: flex; gap: 12px; margin-top: 0.4rem; flex-wrap: wrap; }
+.yn-opt { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 14px; user-select: none; }
+.yn-opt input[type="radio"] { display: none; }
+.yn-box { width: 22px; height: 22px; border: 1.5px solid var(--border); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.12s; background: white; }
+.yn-opt:hover .yn-box { border-color: var(--hes-blue); }
+.yn-opt input:checked + .yn-box { background: var(--hes-blue); border-color: var(--hes-blue); color: white; }
+.yn-opt input:checked + .yn-box::after { content: "✓"; }
+
+.chk-grid { display: grid; gap: 5px; margin-top: 0.4rem; }
+.chk-grid-2 { grid-template-columns: 1fr 1fr; }
+.chk-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 520px) { .chk-grid-2, .chk-grid-3 { grid-template-columns: 1fr; } }
+.chk-opt { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13px; padding: 5px 6px; border-radius: 5px; transition: background 0.1s; user-select: none; }
+.chk-opt:hover { background: var(--bg-secondary); }
+.chk-opt input[type="radio"], .chk-opt input[type="checkbox"] { display: none; }
+.chk-box { width: 17px; height: 17px; min-width: 17px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; background: white; transition: all 0.12s; }
+.chk-opt:hover .chk-box { border-color: var(--hes-blue); }
+.chk-opt input:checked + .chk-box { background: var(--hes-blue); border-color: var(--hes-blue); color: white; }
+.chk-opt input:checked + .chk-box::after { content: "✓"; }
+
+.inline-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 0.4rem; }
+.inline-opt { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; }
+.inline-opt input[type="radio"] { display: none; }
+.inline-opt input:checked + .chk-box { background: var(--hes-blue); border-color: var(--hes-blue); color: white; }
+.inline-opt input:checked + .chk-box::after { content: "✓"; }
+
+.banded { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 0.4rem; }
+
+.write-in { border: none; border-bottom: 1px solid var(--border); background: transparent; font-size: 13px; color: var(--text); outline: none; padding: 1px 0; font-family: inherit; }
+.write-in:focus { border-bottom-color: var(--hes-blue); }
+
+textarea.comments-box { width: 100%; min-height: 80px; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 9px 11px; font-size: 14px; font-family: inherit; color: var(--text); background: white; resize: vertical; outline: none; margin-top: 0.4rem; }
+textarea.comments-box:focus { border-color: var(--hes-blue); }
+
+.submit-btn { display: block; width: 100%; padding: 13px; background: var(--hes-blue); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 2rem; transition: opacity 0.15s; font-family: inherit; }
+.submit-btn:hover { opacity: 0.87; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.success { display: none; text-align: center; padding: 3rem 1rem; }
+.success-icon { width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 1rem; }
+.success h2 { font-size: 20px; font-weight: 600; margin-bottom: 0.5rem; }
+.success p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+.setup-section { background: white; border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+.setup-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 0.5rem; }
+.setup-section p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.5rem; }
+.input-row { display: flex; gap: 8px; margin-top: 6px; }
+.input-row input { flex: 1; font-size: 13px; }
+.status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #d1d5db; margin-right: 6px; vertical-align: middle; }
+.status-dot.ok { background: #22c55e; }
+.status-dot.err { background: #ef4444; }
+pre.sql { font-family: 'Courier New', monospace; font-size: 11.5px; background: #1e1e2e; color: #cdd6f4; border-radius: var(--radius); padding: 14px 16px; overflow-x: auto; line-height: 1.7; margin-top: 8px; white-space: pre; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+<div class="site-header">
+  <div class="logo">health<span>e</span>schools</div>
+  <p>Health-e-Schools Telehealth Program &nbsp;|&nbsp; Patient Satisfaction Survey</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('adult')">Adult survey</button>
+  <button class="tab-btn" onclick="showTab('parent')">Parent / guardian survey</button>
+  <button class="tab-btn" onclick="showTab('setup')">Supabase setup</button>
+</div>
+
+<!-- ═══════════════════════ ADULT SURVEY ═══════════════════════ -->
+<div id="tab-adult">
+<div class="survey-card">
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">Adult Patient Satisfaction Survey</h2>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem;">Health-e-Schools Telehealth Program</p>
+  <div class="privacy-bar">Thank you for using Health-e-Schools! This survey takes about 3 minutes. <strong>Name fields are optional. All responses are reported in aggregate only and will never be shared individually.</strong></div>
+
+  <form id="adult-form" onsubmit="submitSurvey(event,'adult')">
+
+    <div class="sec-head">About your visit</div>
+    <div class="field-grid">
+      <div class="field-item"><label>Patient name <span class="opt">optional</span></label><input type="text" name="patient_name"></div>
+      <div class="field-item"><label>School / location <span class="req">*</span></label><input type="text" name="school" class="req-field" required></div>
+      <div class="field-item"><label>Date of visit <span class="opt">optional</span></label><input type="text" name="visit_date" placeholder="mm/dd/yyyy"></div>
+      <div class="field-item"><label>Zip code <span class="opt">optional</span></label><input type="text" name="zip_code"></div>
+    </div>
+    <div class="q-block">
+      <div class="q-label">Type of concern</div>
+      <div class="inline-row">
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Illness"><span class="chk-box"></span> Illness</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Injury"><span class="chk-box"></span> Injury</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Behavioral Health"><span class="chk-box"></span> Behavioral Health</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Other"><span class="chk-box"></span> Other</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label">Is this your first visit with Health-e-Schools?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="first_visit" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="first_visit" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Overall satisfaction</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">1. </span>Overall, how satisfied were you with your telehealth visit?</div>
+      <div class="scale-wrap">
+        <label class="scale-opt"><input type="radio" name="q1" value="6"><div class="scale-box">☐</div><div class="scale-lbl">Very Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="5"><div class="scale-box">☐</div><div class="scale-lbl">Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="4"><div class="scale-box">☐</div><div class="scale-lbl">Somewhat Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="3"><div class="scale-box">☐</div><div class="scale-lbl">Somewhat Dissatisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="2"><div class="scale-box">☐</div><div class="scale-lbl">Dissatisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="1"><div class="scale-box">☐</div><div class="scale-lbl">Very Dissatisfied</div></label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">2. </span>Did your visit resolve your health concern?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q2" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q2" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">3. </span>After your visit, did you seek additional care for the same concern?</div>
+      <div class="chk-grid chk-grid-2">
+        <label class="chk-opt"><input type="radio" name="q3" value="No - fully resolved"><span class="chk-box"></span> No — fully resolved</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Primary care"><span class="chk-box"></span> Yes — Primary care</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Urgent care"><span class="chk-box"></span> Yes — Urgent care</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Emergency room"><span class="chk-box"></span> Yes — Emergency room</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">4. </span>Would you recommend Health-e-Schools to a friend or family member?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q4" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q4" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">5. </span>Do you feel Health-e-Schools benefits your school or workplace community?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q5" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q5" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">6. </span>How would you rate quality of care compared to another healthcare facility?</div>
+      <div class="inline-row">
+        <label class="inline-opt"><input type="radio" name="q6" value="Better"><span class="chk-box"></span> Better</label>
+        <label class="inline-opt"><input type="radio" name="q6" value="About the same"><span class="chk-box"></span> About the same</label>
+        <label class="inline-opt"><input type="radio" name="q6" value="Not as good"><span class="chk-box"></span> Not as good</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">7. </span>Did you feel well-informed about the telehealth process before your visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q7" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q7" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">8. </span>Did you receive any follow-up communication after your visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q8" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q8" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Convenience &amp; impact</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">9. </span>Were you able to return to class or work after your visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q9" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q9" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">10. </span>Did your visit help you avoid missing school or work?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q10" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q10" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">11. </span>How far would you have traveled for care without Health-e-Schools?</div>
+      <div class="banded">
+        <label class="chk-opt"><input type="radio" name="q11" value="Less than 10 miles"><span class="chk-box"></span> Less than 10 miles</label>
+        <label class="chk-opt"><input type="radio" name="q11" value="10-30 miles"><span class="chk-box"></span> 10–30 miles</label>
+        <label class="chk-opt"><input type="radio" name="q11" value="30-60 miles"><span class="chk-box"></span> 30–60 miles</label>
+        <label class="chk-opt"><input type="radio" name="q11" value="60+ miles"><span class="chk-box"></span> 60+ miles</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">12. </span>How much time did Health-e-Schools save you?</div>
+      <div class="banded">
+        <label class="chk-opt"><input type="radio" name="q12" value="Less than 30 min"><span class="chk-box"></span> Less than 30 min</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="30-60 min"><span class="chk-box"></span> 30–60 min</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="1-2 hours"><span class="chk-box"></span> 1–2 hours</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="More than 2 hours"><span class="chk-box"></span> More than 2 hours</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">13. </span>If Health-e-Schools had not been available, what would you have done? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q13" value="Stayed home / waited"><span class="chk-box"></span> Stayed home / waited</label>
+        <label class="chk-opt"><input type="checkbox" name="q13" value="Gone to regular doctor"><span class="chk-box"></span> Gone to regular doctor</label>
+        <label class="chk-opt"><input type="checkbox" name="q13" value="Gone to urgent care"><span class="chk-box"></span> Gone to urgent care</label>
+        <label class="chk-opt"><input type="checkbox" name="q13" value="Gone to the ER"><span class="chk-box"></span> Gone to the ER</label>
+        <label class="chk-opt"><input type="checkbox" name="q13" value="Wouldn't seek care"><span class="chk-box"></span> Wouldn't seek care</label>
+        <label class="chk-opt"><input type="checkbox" name="q13_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q13_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+      </div>
+    </div>
+
+    <div class="sec-head">Healthcare background</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">14. </span>Do you have a regular healthcare provider for routine visits?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q14" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q14" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">15. </span>How do you typically pay for medical services? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q15" value="Self-pay"><span class="chk-box"></span> Self-pay</label>
+        <label class="chk-opt"><input type="checkbox" name="q15" value="Private Insurance"><span class="chk-box"></span> Private Insurance</label>
+        <label class="chk-opt"><input type="checkbox" name="q15" value="Medicaid"><span class="chk-box"></span> Medicaid</label>
+        <label class="chk-opt"><input type="checkbox" name="q15" value="Medicare"><span class="chk-box"></span> Medicare</label>
+        <label class="chk-opt"><input type="checkbox" name="q15" value="Unable to pay"><span class="chk-box"></span> Unable to pay</label>
+        <label class="chk-opt"><input type="checkbox" name="q15_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q15_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+      </div>
+    </div>
+
+    <div class="sec-head">How did you hear about us?</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">16. </span>Who referred you to Health-e-Schools? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Myself / Self-referral"><span class="chk-box"></span> Myself / Self-referral</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="School Nurse"><span class="chk-box"></span> School Nurse</label>
+        <label class="chk-opt"><input type="checkbox" name="q16_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q16_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Other school staff"><span class="chk-box"></span> Other school staff</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Doctor or provider"><span class="chk-box"></span> Doctor or provider</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Comments &amp; suggestions</div>
+    <div class="q-block">
+      <textarea class="comments-box" name="comments" placeholder="Please share any additional thoughts or feedback..."></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn">Submit survey</button>
+  </form>
+  <div class="success" id="adult-success">
+    <div class="success-icon">✓</div>
+    <h2>Thank you for your feedback!</h2>
+    <p>Your response has been recorded.<br>Please return this form in the envelope provided or mail to:<br>Health-e-Schools, 167 Locust Street Ste. 204, Spruce Pine, NC 28777</p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════ PARENT SURVEY ══════════════════════ -->
+<div id="tab-parent" style="display:none">
+<div class="survey-card">
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">Parent / Guardian Satisfaction Survey</h2>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem;">Health-e-Schools Telehealth Program</p>
+  <div class="privacy-bar">Your child recently received services through Health-e-Schools. This survey takes about 4 minutes. <strong>Name fields are optional. All responses are reported in aggregate only and will never be shared individually.</strong></div>
+
+  <form id="parent-form" onsubmit="submitSurvey(event,'parent')">
+
+    <div class="sec-head">About your child's visit</div>
+    <div class="field-grid">
+      <div class="field-item"><label>Child's name <span class="opt">optional</span></label><input type="text" name="child_name"></div>
+      <div class="field-item"><label>Parent / guardian name <span class="opt">optional</span></label><input type="text" name="parent_name"></div>
+      <div class="field-item"><label>Child's school <span class="req">*</span></label><input type="text" name="school" class="req-field" required></div>
+      <div class="field-item"><label>Date of visit <span class="opt">optional</span></label><input type="text" name="visit_date" placeholder="mm/dd/yyyy"></div>
+      <div class="field-item"><label>Child's zip code <span class="opt">optional</span></label><input type="text" name="zip_code"></div>
+      <div class="field-item"><label>Child's grade level <span class="opt">optional</span></label><input type="text" name="grade_level" placeholder="e.g. 3rd grade"></div>
+    </div>
+    <div class="q-block">
+      <div class="q-label">Type of concern</div>
+      <div class="inline-row">
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Illness"><span class="chk-box"></span> Illness</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Injury"><span class="chk-box"></span> Injury</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Behavioral Health"><span class="chk-box"></span> Behavioral Health</label>
+        <label class="inline-opt"><input type="radio" name="concern_type" value="Other"><span class="chk-box"></span> Other</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label">Is this your child's first visit with Health-e-Schools?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="first_visit" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="first_visit" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Overall satisfaction</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">1. </span>Overall, how satisfied were you with the care your child received?</div>
+      <div class="scale-wrap">
+        <label class="scale-opt"><input type="radio" name="q1" value="6"><div class="scale-box">☐</div><div class="scale-lbl">Very Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="5"><div class="scale-box">☐</div><div class="scale-lbl">Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="4"><div class="scale-box">☐</div><div class="scale-lbl">Somewhat Satisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="3"><div class="scale-box">☐</div><div class="scale-lbl">Somewhat Dissatisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="2"><div class="scale-box">☐</div><div class="scale-lbl">Dissatisfied</div></label>
+        <label class="scale-opt"><input type="radio" name="q1" value="1"><div class="scale-box">☐</div><div class="scale-lbl">Very Dissatisfied</div></label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">2. </span>Did the visit resolve your child's health concern?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q2" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q2" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">3. </span>After the visit, did your child seek additional care for the same concern?</div>
+      <div class="chk-grid chk-grid-2">
+        <label class="chk-opt"><input type="radio" name="q3" value="No - fully resolved"><span class="chk-box"></span> No — fully resolved</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Primary care"><span class="chk-box"></span> Yes — Primary care</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Urgent care"><span class="chk-box"></span> Yes — Urgent care</label>
+        <label class="chk-opt"><input type="radio" name="q3" value="Yes - Emergency room"><span class="chk-box"></span> Yes — Emergency room</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">4. </span>Would you recommend Health-e-Schools to other parents or guardians?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q4" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q4" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">5. </span>Do you feel your child benefitted from having Health-e-Schools at school?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q5" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q5" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">6. </span>How would you rate quality of care compared to another healthcare facility?</div>
+      <div class="inline-row">
+        <label class="inline-opt"><input type="radio" name="q6" value="Better"><span class="chk-box"></span> Better</label>
+        <label class="inline-opt"><input type="radio" name="q6" value="About the same"><span class="chk-box"></span> About the same</label>
+        <label class="inline-opt"><input type="radio" name="q6" value="Not as good"><span class="chk-box"></span> Not as good</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">7. </span>Did you feel well-informed about the telehealth process before the visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q7" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q7" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">8. </span>Did you receive communication about the visit afterward?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q8" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q8" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Convenience &amp; impact</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">9. </span>Was your child able to return to class after the visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q9" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q9" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">10. </span>Did Health-e-Schools help keep your child from missing school?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q10" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q10" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">11. </span>Were you able to stay at work during your child's visit?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q11_work" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q11_work" value="No"><span class="yn-box"></span> No</label>
+        <label class="yn-opt"><input type="radio" name="q11_work" value="Not applicable"><span class="yn-box"></span> Not applicable</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">12. </span>How far would you have traveled for care without Health-e-Schools?</div>
+      <div class="banded">
+        <label class="chk-opt"><input type="radio" name="q12" value="Less than 10 miles"><span class="chk-box"></span> Less than 10 miles</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="10-30 miles"><span class="chk-box"></span> 10–30 miles</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="30-60 miles"><span class="chk-box"></span> 30–60 miles</label>
+        <label class="chk-opt"><input type="radio" name="q12" value="60+ miles"><span class="chk-box"></span> 60+ miles</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">13. </span>How much school time did your child save?</div>
+      <div class="banded">
+        <label class="chk-opt"><input type="radio" name="q13_time" value="Less than 30 min"><span class="chk-box"></span> Less than 30 min</label>
+        <label class="chk-opt"><input type="radio" name="q13_time" value="30-60 min"><span class="chk-box"></span> 30–60 min</label>
+        <label class="chk-opt"><input type="radio" name="q13_time" value="1-2 hours"><span class="chk-box"></span> 1–2 hours</label>
+        <label class="chk-opt"><input type="radio" name="q13_time" value="More than 2 hours"><span class="chk-box"></span> More than 2 hours</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">14. </span>If Health-e-Schools had not been available, what would you have done? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q14" value="Kept child home"><span class="chk-box"></span> Kept child home</label>
+        <label class="chk-opt"><input type="checkbox" name="q14" value="Sent to school / waited"><span class="chk-box"></span> Sent to school / waited</label>
+        <label class="chk-opt"><input type="checkbox" name="q14" value="Taken to regular doctor"><span class="chk-box"></span> Taken to regular doctor</label>
+        <label class="chk-opt"><input type="checkbox" name="q14" value="Taken to urgent care"><span class="chk-box"></span> Taken to urgent care</label>
+        <label class="chk-opt"><input type="checkbox" name="q14" value="Taken to the ER"><span class="chk-box"></span> Taken to the ER</label>
+        <label class="chk-opt"><input type="checkbox" name="q14_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q14_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+      </div>
+    </div>
+
+    <div class="sec-head">Healthcare background</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">15. </span>Does your child have a regular doctor for routine visits?</div>
+      <div class="yn-row">
+        <label class="yn-opt"><input type="radio" name="q15" value="Yes"><span class="yn-box"></span> Yes</label>
+        <label class="yn-opt"><input type="radio" name="q15" value="No"><span class="yn-box"></span> No</label>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">16. </span>How do you typically pay for your child's medical services? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Self-pay"><span class="chk-box"></span> Self-pay</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Private Insurance"><span class="chk-box"></span> Private Insurance</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Medicaid"><span class="chk-box"></span> Medicaid</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Medicare"><span class="chk-box"></span> Medicare</label>
+        <label class="chk-opt"><input type="checkbox" name="q16" value="Unable to pay"><span class="chk-box"></span> Unable to pay</label>
+        <label class="chk-opt"><input type="checkbox" name="q16_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q16_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+      </div>
+    </div>
+
+    <div class="sec-head">How did you hear about us?</div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">17. </span>Who suggested that Health-e-Schools see your child? (Check all that apply)</div>
+      <div class="chk-grid chk-grid-3">
+        <label class="chk-opt"><input type="checkbox" name="q17" value="Parent or Guardian"><span class="chk-box"></span> Parent or Guardian</label>
+        <label class="chk-opt"><input type="checkbox" name="q17" value="School Nurse"><span class="chk-box"></span> School Nurse</label>
+        <label class="chk-opt"><input type="checkbox" name="q17_other" value="Other"><span class="chk-box"></span> Other: <input type="text" name="q17_other_text" class="write-in" style="width:90px;margin-left:5px;" placeholder=""></label>
+        <label class="chk-opt"><input type="checkbox" name="q17" value="Other school staff"><span class="chk-box"></span> Other school staff</label>
+        <label class="chk-opt"><input type="checkbox" name="q17" value="Doctor or provider"><span class="chk-box"></span> Doctor or provider</label>
+      </div>
+    </div>
+
+    <div class="sec-head">Comments &amp; suggestions</div>
+    <div class="q-block">
+      <textarea class="comments-box" name="comments" placeholder="Please share any additional thoughts or feedback..."></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn">Submit survey</button>
+  </form>
+  <div class="success" id="parent-success">
+    <div class="success-icon">✓</div>
+    <h2>Thank you for your feedback!</h2>
+    <p>Your response has been recorded.</p>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════ SETUP TAB ══════════════════════ -->
+<div id="tab-setup" style="display:none">
+  <div class="setup-section">
+    <h3><span class="status-dot" id="status-dot"></span>Supabase connection</h3>
+    <p>Paste your Supabase project URL and anon key here. Once saved, responses from both surveys will be stored automatically. These credentials are saved only in your browser and embedded in the page when you deploy.</p>
+    <div class="input-row"><input type="text" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" style="font-size:13px;"></div>
+    <div class="input-row" style="margin-top:6px;">
+      <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-size:13px;">
+      <button onclick="saveCreds()" style="font-size:13px;padding:7px 14px;white-space:nowrap;">Save</button>
+    </div>
+    <p id="cred-msg" style="font-size:12px;margin-top:8px;color:var(--text-muted);"></p>
+  </div>
+
+  <div class="setup-section">
+    <h3>Step 1 — Create your tables</h3>
+    <p>Go to your Supabase project → SQL Editor → New query. Paste and run this:</p>
+    <pre class="sql">create table adult_responses (
+  id            uuid default gen_random_uuid() primary key,
+  created_at    timestamptz default now(),
+  school        text not null,
+  visit_date    text, zip_code text,
+  concern_type  text, first_visit text,
+  q1_satisfaction   int,
+  q2_resolved       text,  q3_followup_care  text,
+  q4_recommend      text,  q5_community      text,
+  q6_quality        text,  q7_informed       text,
+  q8_followup_comm  text,  q9_return_work    text,
+  q10_avoided_absence text, q11_distance     text,
+  q12_time_saved    text,  q13_would_have    text[],
+  q14_provider      text,  q15_payment       text[],
+  q16_referral      text[], comments         text
+);
+
+create table parent_responses (
+  id            uuid default gen_random_uuid() primary key,
+  created_at    timestamptz default now(),
+  school        text not null,
+  visit_date    text, zip_code text, grade_level text,
+  concern_type  text, first_visit text,
+  q1_satisfaction   int,
+  q2_resolved       text,  q3_followup_care  text,
+  q4_recommend      text,  q5_benefitted     text,
+  q6_quality        text,  q7_informed       text,
+  q8_followup_comm  text,  q9_return_class   text,
+  q10_avoided_absence text, q11_stayed_work  text,
+  q12_distance      text,  q13_time_saved    text,
+  q14_would_have    text[], q15_provider     text,
+  q16_payment       text[], q17_referral     text[],
+  comments          text
+);</pre>
+  </div>
+
+  <div class="setup-section">
+    <h3>Step 2 — Set access policy (Row Level Security)</h3>
+    <p>Run this in the SQL editor to allow the form to insert responses but not read or delete them:</p>
+    <pre class="sql">alter table adult_responses enable row level security;
+alter table parent_responses enable row level security;
+
+create policy "Allow anonymous inserts" on adult_responses
+  for insert to anon with check (true);
+
+create policy "Allow anonymous inserts" on parent_responses
+  for insert to anon with check (true);</pre>
+  </div>
+
+  <div class="setup-section">
+    <h3>Step 3 — Deploy to GitHub Pages</h3>
+    <p style="margin-bottom:6px;">1. Save your credentials above<br>2. In your GitHub repo, edit <code>index.html</code><br>3. Find the two lines near the bottom that read <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> and paste in your values<br>4. Commit — your live site updates in about 60 seconds</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://bfalfsuinzzfsddjosex.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmYWxmc3Vpbnp6ZnNkZGpvc2V4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MDQ5NjAsImV4cCI6MjA4OTI4MDk2MH0.GWIeqTZbAYDlBK5lfhIzV-Gba3pDAgQn-kBwHFpLMtE";
+
+let sbUrl = SUPABASE_URL;
+let sbKey = SUPABASE_KEY;
+
+if (sbUrl) {
+  document.getElementById('sb-url').value = sbUrl;
+  document.getElementById('sb-key').value = sbKey;
+  document.getElementById('status-dot').className = 'status-dot ok';
+}
+
+function showTab(name) {
+  ['adult','parent','setup'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['adult','parent','setup'][i] === name);
+  });
+}
+
+function saveCreds() {
+  sbUrl = document.getElementById('sb-url').value.trim().replace(/\/$/, '');
+  sbKey = document.getElementById('sb-key').value.trim();
+  const dot = document.getElementById('status-dot');
+  const msg = document.getElementById('cred-msg');
+  if (sbUrl && sbKey) {
+    dot.className = 'status-dot ok';
+    msg.textContent = 'Saved. To make permanent, paste these into the SUPABASE_URL and SUPABASE_KEY variables in the HTML file before uploading to GitHub.';
+  } else {
+    dot.className = 'status-dot err';
+    msg.textContent = 'Please enter both values.';
+  }
+}
+
+function collectForm(form) {
+  const data = {};
+  const checked = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === 'checkbox') {
+      if (el.checked) {
+        if (!checked[el.name]) checked[el.name] = [];
+        checked[el.name].push(el.value);
+      }
+    } else if (el.type === 'radio') {
+      if (el.checked) data[el.name] = el.value;
+    } else {
+      if (el.value) data[el.name] = el.value;
+    }
+  }
+  Object.assign(data, checked);
+  if (data.q1) data.q1 = parseInt(data.q1);
+  return data;
+}
+
+async function submitSurvey(e, type) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.submit-btn');
+  const table = type === 'adult' ? 'adult_responses' : 'parent_responses';
+  const payload = collectForm(form);
+
+  if (sbUrl && sbKey) {
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    try {
+      const res = await fetch(`${sbUrl}/rest/v1/${table}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Submit survey';
+      alert('There was a problem submitting your response. Please try again or contact appts@crhi.org.\n\n' + err.message);
+      return;
+    }
+  }
+
+  form.style.display = 'none';
+  document.getElementById(type + '-success').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
