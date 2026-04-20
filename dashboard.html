@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CRHI Survey Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap">
+<style>
+  /* ── Reset & Variables ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue:    #118CB0;
+    --blue-d:  #0d6f8a;
+    --blue-l:  #d6eef5;
+    --green:   #C1DD8D;
+    --green-d: #8aaa50;
+    --dark:    #393F47;
+    --mid:     #6b7280;
+    --light:   #f0f6fa;
+    --white:   #ffffff;
+    --radius:  12px;
+    --shadow:  0 2px 20px rgba(57,63,71,0.10);
+    --shadow-lg: 0 8px 40px rgba(57,63,71,0.14);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f4f8fb;
+    color: var(--dark);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Auth Screen ── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--dark) 0%, #2a3040 50%, var(--blue-d) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  #auth-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 80% 20%, rgba(17,140,176,0.25) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(193,221,141,0.12) 0%, transparent 50%);
+  }
+  .auth-card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 20px;
+    padding: 52px 48px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .auth-logo {
+    width: 52px;
+    height: 8px;
+    background: var(--green);
+    margin: 0 auto 28px;
+    border-radius: 4px;
+  }
+  .auth-card h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .auth-card p {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+  .btn-signin {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    color: var(--dark);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .btn-signin:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+  .btn-signin:active { transform: translateY(0); }
+  .btn-signin svg { width:18px; height:18px; }
+  .auth-note {
+    margin-top: 20px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+  }
+  #auth-error {
+    display: none;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    margin-top: 16px;
+  }
+
+  /* ── App Shell ── */
+  #app { display: none; }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-bar {
+    width: 4px;
+    height: 28px;
+    background: var(--green);
+    border-radius: 2px;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: var(--white);
+    letter-spacing: -0.2px;
+  }
+  .header-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    font-weight: 300;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #last-updated {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+  }
+  .btn-refresh {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-refresh:hover { background: rgba(255,255,255,0.14); color: #fff; }
+  .btn-signout {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s;
+  }
+  .btn-signout:hover { color: rgba(255,255,255,0.7); }
+
+  /* ── Main Layout ── */
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* ── Section Labels ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 14px;
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5eaee;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ── Stat Cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 0;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px 22px 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid #edf1f5;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--blue);
+  }
+  .stat-card.green::before { background: var(--green-d); }
+  .stat-card.gold::before  { background: #f59e0b; }
+  .stat-card.teal::before  { background: #0891b2; }
+  .stat-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--dark);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--mid);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--blue);
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* ── Charts Grid ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .charts-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 900px) {
+    .charts-grid, .charts-grid.three { grid-template-columns: 1fr; }
+  }
+  .chart-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid #edf1f5;
+  }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: 11px;
+    color: var(--mid);
+    margin-bottom: 20px;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+  .chart-wrap.tall { height: 280px; }
+  .chart-wrap.short { height: 160px; }
+
+  /* ── Program Comparison ── */
+  .program-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 700px) { .program-grid { grid-template-columns: 1fr; } }
+  .program-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid #edf1f5;
+    border-left: 4px solid var(--blue);
+  }
+  .program-card.parent { border-left-color: var(--green-d); }
+  .program-card.neighbors { border-left-color: #0891b2; }
+  .program-name {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mid);
+    margin-bottom: 12px;
+  }
+  .program-count {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--dark);
+    line-height: 1;
+  }
+  .program-count-label { font-size: 11px; color: var(--mid); margin-bottom: 12px; }
+  .program-sat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f4f8;
+  }
+  .sat-score {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--blue);
+  }
+  .sat-label { font-size: 11px; color: var(--mid); }
+  .sat-bar-wrap { flex: 1; height: 6px; background: #edf1f5; border-radius: 3px; overflow: hidden; }
+  .sat-bar { height: 100%; border-radius: 3px; background: var(--blue); transition: width 0.8s ease; }
+
+  /* ── Response Rate ── */
+  .rate-card {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-d) 100%);
+    border-radius: var(--radius);
+    padding: 24px;
+    color: white;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 4px 24px rgba(17,140,176,0.3);
+  }
+  .rate-big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 64px;
+    line-height: 1;
+    color: white;
+  }
+  .rate-label { font-size: 13px; opacity: 0.8; margin-top: 6px; }
+  .rate-breakdown { font-size: 12px; opacity: 0.65; margin-top: 4px; }
+  .rate-donut { width: 100px; height: 100px; position: relative; }
+  .rate-donut canvas { width: 100% !important; height: 100% !important; }
+
+  /* ── Outcomes Table ── */
+  .outcome-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  .outcome-row:last-child { border-bottom: none; }
+  .outcome-label { flex: 1; font-size: 12px; color: var(--dark); }
+  .outcome-pct {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue);
+    width: 40px;
+    text-align: right;
+  }
+  .outcome-bar-wrap { width: 120px; height: 6px; background: #edf1f5; border-radius: 3px; overflow: hidden; }
+  .outcome-bar { height: 100%; border-radius: 3px; background: var(--blue); transition: width 0.8s ease; }
+
+  /* ── Comments ── */
+  .comment-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid #edf1f5;
+  }
+  .comment-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f4f8;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+  }
+  .comment-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .comment-sat {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--blue);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .comment-sat.high { background: #f0fdf4; color: #16a34a; }
+  .comment-sat.low  { background: #fef2f2; color: #dc2626; }
+  .comment-text { font-size: 13px; color: var(--dark); line-height: 1.6; }
+  .comment-meta { font-size: 11px; color: var(--mid); margin-top: 4px; }
+
+  /* ── Grant Snapshot ── */
+  .grant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .grant-item {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid #edf1f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .grant-label { font-size: 12px; color: var(--mid); }
+  .grant-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--dark);
+    white-space: nowrap;
+  }
+
+  /* ── Loading & Error ── */
+  #loading {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(244,248,251,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--blue-l);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--mid); }
+
+  #error-banner {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px 20px;
+    font-size: 13px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* ── Month badge ── */
+  .month-badge {
+    display: inline-block;
+    background: var(--light);
+    color: var(--blue);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Fade-in ── */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .fade-in:nth-child(2)  { animation-delay: 0.05s; }
+  .fade-in:nth-child(3)  { animation-delay: 0.10s; }
+  .fade-in:nth-child(4)  { animation-delay: 0.15s; }
+  .fade-in:nth-child(5)  { animation-delay: 0.20s; }
+  .fade-in:nth-child(6)  { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- ── Auth Screen ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"></div>
+    <h1>CRHI Survey Dashboard</h1>
+    <p>Sign in with your CRHI Google account to access patient satisfaction data and program analytics.</p>
+    <button class="btn-signin" onclick="signIn()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div id="auth-error"></div>
+    <p class="auth-note">Access restricted to @crhi.org accounts</p>
+  </div>
+</div>
+
+<!-- ── Loading ── -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading dashboard data…</div>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="header-bar"></div>
+      <div>
+        <div class="header-title">CRHI Survey Dashboard</div>
+        <div class="header-subtitle">Patient Satisfaction Analytics</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="last-updated"></span>
+      <button class="btn-refresh" onclick="loadData()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Refresh
+      </button>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="error-banner"></div>
+
+    <!-- Response Volume -->
+    <div class="section-label">Response Volume</div>
+    <div class="stats-grid" id="volume-stats"></div>
+
+    <!-- Response Rate -->
+    <div class="section-label" style="margin-top:24px;">Survey Requests & Response Rate</div>
+    <div id="rate-section"></div>
+
+    <!-- Program Breakdown -->
+    <div class="section-label">Program Breakdown</div>
+    <div class="program-grid" id="program-cards"></div>
+
+    <!-- Charts Row 1 -->
+    <div class="section-label">Trends & Satisfaction</div>
+    <div class="charts-grid">
+      <div class="chart-card full">
+        <div class="chart-title">Monthly Response Trend</div>
+        <div class="chart-sub">Survey responses received per program over the last 6 months</div>
+        <div class="chart-wrap tall"><canvas id="trendChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="charts-grid" style="margin-top:16px;">
+      <div class="chart-card">
+        <div class="chart-title">Satisfaction Score Distribution</div>
+        <div class="chart-sub">Q1 scores (1–6 scale) across all programs</div>
+        <div class="chart-wrap"><canvas id="satChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Payer Mix</div>
+        <div class="chart-sub">How patients pay for medical services (Q15)</div>
+        <div class="chart-wrap"><canvas id="payerChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Outcomes -->
+    <div class="section-label">Key Outcomes</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Key Outcome Rates</div>
+        <div class="chart-sub">% of all respondents answering positively</div>
+        <div id="outcomes-list"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Response Rate Over Time</div>
+        <div class="chart-sub">Requests sent vs. responses received each month</div>
+        <div class="chart-wrap"><canvas id="rateChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Grant Snapshot -->
+    <div class="section-label">Grant Reporting Snapshot</div>
+    <div class="grant-grid" id="grant-grid"></div>
+
+    <!-- Comments -->
+    <div class="section-label">Recent Patient Comments</div>
+    <div class="comment-card">
+      <div id="comments-list"></div>
+    </div>
+
+    <div style="height:40px;"></div>
+  </main>
+</div>
+
+<script>
+// ── Config ── UPDATE THESE BEFORE DEPLOYING
+const CLIENT_ID    = '819782485767-9ig7auecvl572rv6srovilu8694agbd8.apps.googleusercontent.com';
+const DATA_URL     = 'https://script.google.com/macros/s/AKfycbz71sur8xnH3GsIyhMH9mVZ2ksdekJ5Idjjc6kz3HfXsnPaif3zkETLbrAr9qJlqT8MrA/exec';
+
+const BLUE   = '#118CB0';
+const GREEN  = '#8aaa50';
+const TEAL   = '#0891b2';
+const DARK   = '#393F47';
+const MID    = '#6b7280';
+const LIGHT  = '#e2edf3';
+
+let _token = null;
+let charts = {};
+
+// ── Auth ──────────────────────────────────────────────────────
+function loadGis() {
+  return new Promise((res, rej) => {
+    if (window.google?.accounts) { res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function signIn() {
+  await loadGis();
+  const client = window.google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'openid email profile',
+    callback: async r => {
+      if (r.error) { showAuthError('Sign-in failed. Please try again.'); return; }
+      _token = r.access_token;
+      try {
+        const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${_token}` }
+        }).then(r => r.json());
+
+        if (!info.email?.endsWith('@crhi.org')) {
+          _token = null;
+          window.google.accounts.oauth2.revoke(r.access_token, () => {});
+          showAuthError(`Access denied. ${info.email} is not a CRHI account.`);
+          return;
+        }
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        await loadData();
+      } catch(e) {
+        showAuthError('Could not verify your account. Please try again.');
+      }
+    },
+  });
+  client.requestAccessToken({ prompt: 'select_account' });
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function signOut() {
+  if (_token && window.google?.accounts?.oauth2) {
+    window.google.accounts.oauth2.revoke(_token, () => {});
+  }
+  _token = null;
+  location.reload();
+}
+
+// ── Data ──────────────────────────────────────────────────────
+async function loadData() {
+  showLoading(true);
+  hideError();
+  try {
+    const resp = await fetch(DATA_URL);
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error || 'Failed to load data');
+    renderAll(json.data);
+    document.getElementById('last-updated').textContent =
+      'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    showError('Could not load dashboard data. ' + e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderAll(d) {
+  renderVolumeStats(d);
+  renderRateSection(d);
+  renderProgramCards(d);
+  renderTrendChart(d);
+  renderSatChart(d);
+  renderPayerChart(d);
+  renderOutcomes(d);
+  renderRateChart(d);
+  renderGrantGrid(d);
+  renderComments(d);
+}
+
+function renderVolumeStats(d) {
+  const now = new Date();
+  const moLabel = now.toLocaleString('default', {month:'long'});
+  const cards = [
+    { icon:'📋', value: d.totals.responses, label:'Total Responses', sub: d.thisMonth.adult+d.thisMonth.parent+d.thisMonth.neighbors + ' this month', cls:'' },
+    { icon:'📧', value: d.totals.emailsSent, label:'Emails Sent', sub: 'all time', cls:'teal' },
+    { icon:'📬', value: d.totals.mailSent, label:'Letters Mailed', sub: 'all time', cls:'green' },
+    { icon:'⭐', value: avgSatAll(d).toFixed(1), label:'Avg Satisfaction', sub: 'out of 6.0', cls:'gold' },
+  ];
+  document.getElementById('volume-stats').innerHTML = cards.map((c,i) => `
+    <div class="stat-card ${c.cls} fade-in">
+      <span class="stat-icon">${c.icon}</span>
+      <div class="stat-value">${c.value}</div>
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+function avgSatAll(d) {
+  const programs = [
+    { p: d.byProgram.adult,     count: d.byProgram.adult.count },
+    { p: d.byProgram.parent,    count: d.byProgram.parent.count },
+    { p: d.byProgram.neighbors, count: d.byProgram.neighbors.count },
+  ];
+  const total = programs.reduce((s,p) => s + p.count, 0);
+  if (!total) return 0;
+  return programs.reduce((s,p) => s + p.p.avgSat * p.count, 0) / total;
+}
+
+function renderRateSection(d) {
+  const rate = d.totals.responseRate;
+  const el = document.getElementById('rate-section');
+  el.innerHTML = `
+    <div class="rate-card fade-in">
+      <div>
+        <div class="rate-big">${rate}%</div>
+        <div class="rate-label">Overall Response Rate</div>
+        <div class="rate-breakdown">${d.totals.responses} responses from ${d.totals.totalSent} requests sent</div>
+      </div>
+      <div class="rate-donut"><canvas id="rateDonut"></canvas></div>
+    </div>`;
+
+  destroyChart('rateDonut');
+  charts['rateDonut'] = new Chart(document.getElementById('rateDonut'), {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [d.totals.responses, Math.max(d.totals.totalSent - d.totals.responses, 0)],
+        backgroundColor: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.2)'],
+        borderWidth: 0,
+      }]
+    },
+    options: { cutout:'72%', plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:800} }
+  });
+}
+
+function renderProgramCards(d) {
+  const programs = [
+    { key:'adult',     name:'Health-e-Schools Adult',  cls:'adult',     data:d.byProgram.adult },
+    { key:'parent',    name:'Health-e-Schools Parent', cls:'parent',    data:d.byProgram.parent },
+    { key:'neighbors', name:'Health-e-Neighbors',      cls:'neighbors', data:d.byProgram.neighbors },
+  ];
+  document.getElementById('program-cards').innerHTML = programs.map(p => `
+    <div class="program-card ${p.cls} fade-in">
+      <div class="program-name">${p.name}</div>
+      <div class="program-count">${p.data.count}</div>
+      <div class="program-count-label">responses</div>
+      <div class="program-sat">
+        <div>
+          <div class="sat-score">${p.data.avgSat ? p.data.avgSat.toFixed(1) : '—'}</div>
+          <div class="sat-label">avg sat.</div>
+        </div>
+        <div class="sat-bar-wrap">
+          <div class="sat-bar" style="width:${p.data.avgSat ? (p.data.avgSat/6*100) : 0}%"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTrendChart(d) {
+  const labels = d.monthlyTrend.map(m => fmtMonth(m.month));
+  destroyChart('trendChart');
+  charts['trendChart'] = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'HeS Adult',   data:d.monthlyTrend.map(m=>m.adult),     borderColor:BLUE,  backgroundColor:BLUE+'20',  fill:true, tension:0.4, pointRadius:4 },
+        { label:'HeS Parent',  data:d.monthlyTrend.map(m=>m.parent),    borderColor:GREEN, backgroundColor:GREEN+'20', fill:true, tension:0.4, pointRadius:4 },
+        { label:'Neighbors',   data:d.monthlyTrend.map(m=>m.neighbors), borderColor:TEAL,  backgroundColor:TEAL+'20',  fill:true, tension:0.4, pointRadius:4 },
+      ]
+    },
+    options: chartOpts({ yBeginZero:true })
+  });
+}
+
+function renderSatChart(d) {
+  const labels = ['6 — Extremely','5 — Very','4 — Satisfied','3 — Neutral','2 — Dissatisfied','1 — Not at all'];
+  const colors = ['#16a34a','#4ade80',BLUE,'#fbbf24','#f97316','#ef4444'];
+  const totalDist = labels.map((_,i) =>
+    (d.byProgram.adult.satDist[i]||0) + (d.byProgram.parent.satDist[i]||0) + (d.byProgram.neighbors.satDist[i]||0)
+  );
+  destroyChart('satChart');
+  charts['satChart'] = new Chart(document.getElementById('satChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data:totalDist, backgroundColor:colors, borderRadius:6, borderSkipped:false }]
+    },
+    options: {
+      ...chartOpts({ yBeginZero:true }),
+      indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.raw} responses` } } }
+    }
+  });
+}
+
+function renderPayerChart(d) {
+  destroyChart('payerChart');
+  if (!d.payerMix.length) return;
+  const colors = [BLUE, GREEN, TEAL, '#f59e0b','#8b5cf6','#94a3b8'];
+  charts['payerChart'] = new Chart(document.getElementById('payerChart'), {
+    type: 'doughnut',
+    data: {
+      labels: d.payerMix.map(p=>p.label),
+      datasets:[{ data:d.payerMix.map(p=>p.count), backgroundColor:colors.slice(0,d.payerMix.length), borderWidth:2, borderColor:'#fff' }]
+    },
+    options: { cutout:'55%', plugins:{ legend:{ position:'right', labels:{ font:{family:'DM Sans',size:11}, boxWidth:12, padding:12 } } }, animation:{duration:800} }
+  });
+}
+
+function renderOutcomes(d) {
+  document.getElementById('outcomes-list').innerHTML = d.outcomes.map(o => `
+    <div class="outcome-row">
+      <div class="outcome-label">${o.label}</div>
+      <div class="outcome-bar-wrap"><div class="outcome-bar" style="width:${o.pct}%"></div></div>
+      <div class="outcome-pct">${o.pct}%</div>
+    </div>`).join('');
+}
+
+function renderRateChart(d) {
+  const labels = d.monthlyTrend.map(m => fmtMonth(m.month));
+  destroyChart('rateChart');
+  charts['rateChart'] = new Chart(document.getElementById('rateChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Requests', data:d.monthlyTrend.map(m=>m.requests), backgroundColor:LIGHT, borderRadius:4 },
+        { label:'Responses', data:d.monthlyTrend.map(m=>m.total), backgroundColor:BLUE, borderRadius:4 },
+      ]
+    },
+    options: chartOpts({ yBeginZero:true })
+  });
+}
+
+function renderGrantGrid(d) {
+  const total = d.totals.responses || 1;
+  const items = [
+    { label:'Total Responses',         value: d.totals.responses },
+    { label:'Survey Requests Sent',    value: d.totals.totalSent },
+    { label:'Response Rate',           value: d.totals.responseRate + '%' },
+    { label:'First-time Patients',     value: d.firstVisit + ' (' + pct(d.firstVisit, total) + '%)' },
+    { label:'Would Use Again',         value: d.wouldReturn + ' (' + pct(d.wouldReturn, total) + '%)' },
+    { label:'Miles Saved (total)',      value: d.distanceSaved.total + ' mi' },
+    { label:'Hours Saved (total)',      value: d.timeSaved.total + ' hrs' },
+  ];
+  document.getElementById('grant-grid').innerHTML = items.map(i => `
+    <div class="grant-item fade-in">
+      <div class="grant-label">${i.label}</div>
+      <div class="grant-value">${i.value}</div>
+    </div>`).join('');
+}
+
+function renderComments(d) {
+  if (!d.recentComments.length) {
+    document.getElementById('comments-list').innerHTML = '<p style="color:var(--mid);font-size:13px;padding:12px 0">No comments yet.</p>';
+    return;
+  }
+  document.getElementById('comments-list').innerHTML = d.recentComments.map(c => {
+    const sat = parseFloat(c.sat);
+    const satCls = sat >= 5 ? 'high' : sat <= 2 ? 'low' : '';
+    return `
+    <div class="comment-item">
+      <div class="comment-sat ${satCls}">${sat || '—'}</div>
+      <div>
+        <div class="comment-text">${escHtml(c.text)}</div>
+        <div class="comment-meta">${c.program}${c.date ? ' · ' + c.date : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Chart Helpers ─────────────────────────────────────────────
+function chartOpts({ yBeginZero = false } = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 700 },
+    plugins: {
+      legend: { position:'bottom', labels:{ font:{family:'DM Sans',size:11}, boxWidth:12, padding:16 } },
+      tooltip: { bodyFont:{family:'DM Sans'}, titleFont:{family:'DM Sans',weight:'600'} }
+    },
+    scales: {
+      x: { grid:{color:'#f0f4f8'}, ticks:{font:{family:'DM Sans',size:11},color:MID} },
+      y: { beginAtZero:yBeginZero, grid:{color:'#f0f4f8'}, ticks:{font:{family:'DM Sans',size:11},color:MID} }
+    }
+  };
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function fmtMonth(mo) {
+  const [y,m] = mo.split('-');
+  return new Date(y, m-1, 1).toLocaleString('default', {month:'short', year:'2-digit'});
+}
+function pct(n, total) { return total ? Math.round((n/total)*100) : 0; }
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function showLoading(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
+function showError(msg) { const e = document.getElementById('error-banner'); e.style.display='block'; e.textContent=msg; }
+function hideError() { document.getElementById('error-banner').style.display='none'; }
+</script>
+</body>
+</html>
